@@ -1,0 +1,4 @@
+egenix-mx-base==3.2.6
+coverage==3.6
+django-coverage==1.2.4
+git+https://github.com/justquick/django-mx-datetime.git#egg=django-mx-datetime
