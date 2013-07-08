@@ -64,7 +64,7 @@ Define your models using the new fields from the djmx package:
         pub_date = DateField()
 
         class Meta:
-            ordering = ('pub_date', )
+            ordering = ('-pub_date', )
 
         def __unicode__(self):
             return u'%s: (published on %s)' % (self.name, self.pub_date.date)
@@ -85,7 +85,7 @@ Now you can setup your model in the admin:
     class MyModelAdmin(admin.ModelAdmin):
         formfield_overrides = mx_overrides
         list_display = ('name', 'pub_date_formatted')
-        list_filter = ('-pub_date',)
+        list_filter = ('pub_date',)
 
         pub_date_formatted = date_format('pub_date')
         pub_date_formatted.short_description = 'Publication Date'
