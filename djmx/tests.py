@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.db import models
 from django import forms
 from django.core.serializers import serialize, deserialize
+from django.core.exceptions import ValidationError
 try:
     from json import loads
 except ImportError:
@@ -129,3 +130,6 @@ class DateTest(TestCase):
             some_date_attr = self.dates[0]
 
         self.assertEqual(method(None, MockModel()), '2001-08-03')
+
+    def test_garbage(self):
+        self.assertRaises(ValidationError, Model.objects.create, date='adsfasdfsdf')

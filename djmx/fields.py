@@ -5,6 +5,7 @@ from django.db import models, connection
 from django.core.exceptions import ValidationError
 
 from . import forms
+from .utils import strpdatetime
 
 
 class DateField(models.DateField):
@@ -33,8 +34,7 @@ class DateField(models.DateField):
                 try:
                     value = DateFrom(super(DateField, self).to_python(value))
                 except ValidationError:
-                    # TODO: if mx doesnt understand the input type it always returns today here
-                    value = DateFrom(value)
+                    value = strpdatetime(value)
         return value.rebuild(hour=12)
 
     def pre_save(self, model_instance, add):

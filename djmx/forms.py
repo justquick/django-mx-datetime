@@ -7,6 +7,8 @@ try:
 except ImportError:
     from django.forms.fields import EMPTY_VALUES
 
+from .utils import strpdatetime
+
 
 class DateField(forms.DateField):
     """
@@ -20,5 +22,9 @@ class DateField(forms.DateField):
             return value
         return super(DateField, self).to_python(value)
 
-    def strptime(self, value, format):
-        return DateFrom(value)
+    def strptime(self, value, frmt):
+        try:
+            value = DateFrom(super(DateField, self).strptime(value, frmt))
+        except ValueError:
+            value = strpdatetime(value)
+        return value.rebuild(hour=12)
