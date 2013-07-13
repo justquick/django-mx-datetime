@@ -1,11 +1,10 @@
-from datetime import date
-from mx.DateTime import DateTimeFromJDN, DateTimeType, DateFrom, today
+from mx.DateTime import DateTimeType, today
 
-from django.db import models, connection
-from django.core.exceptions import ValidationError
+from django.db import models
+
 
 from . import forms
-from .utils import strpdatetime
+from . import utils
 
 
 class DateField(models.DateField):
@@ -19,23 +18,7 @@ class DateField(models.DateField):
         return 'IntegerField'
 
     def to_python(self, value):
-        if value is None or isinstance(value, DateTimeType):
-            return value
-        elif isinstance(value, (int, long)):
-            value = DateTimeFromJDN(value)
-        elif isinstance(value, date):
-            value = DateFrom(value)
-        elif isinstance(value, basestring):
-            if not value.strip():
-                return
-            try:
-                value = DateTimeFromJDN(int(value))
-            except ValueError:
-                try:
-                    value = DateFrom(super(DateField, self).to_python(value))
-                except ValidationError:
-                    value = strpdatetime(value)
-        return value.rebuild(hour=12)
+        return utils.to_python(self, value)
 
     def pre_save(self, model_instance, add):
         if self.auto_now or (self.auto_now_add and add):
@@ -44,11 +27,11 @@ class DateField(models.DateField):
             return value
         return super(DateField, self).pre_save(model_instance, add)
 
-    def get_db_prep_value(self, value, connection=connection, prepared=False):
+    def get_db_prep_value(self, value, connection=None, prepared=False):
         if not prepared:
             value = self.get_prep_value(value)
         if isinstance(value, DateTimeType):
-            return int(value.rebuild(hour=12).jdn)
+            return int(value.jdn)
 
     def get_prep_value(self, value):
         return self.to_python(value)

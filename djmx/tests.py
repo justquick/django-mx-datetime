@@ -1,12 +1,25 @@
 from datetime import date
-from mx.DateTime import Date, today
+from mx.DateTime import Date, today, MinDateTime, MaxDateTime
 
 import django
 from django.test import TestCase
 from django.db import models
+from django.conf import settings
 from django import forms
 from django.core.serializers import serialize, deserialize
 from django.core.exceptions import ValidationError
+try:
+    ENGINE = settings.DATABASES['default']['ENGINE']
+except AttributeError:
+    ENGINE = settings.DATABASE_ENGINE
+ENGINE = ENGINE.split('.')[-1]
+try:
+    from django.db.utils import DatabaseError
+except ImportError:
+    if ENGINE == 'mysql':
+        from _mysql_exceptions import DataError as DatabaseError
+    else:
+        from psycopg2 import DataError as DatabaseError
 try:
     from json import loads
 except ImportError:
@@ -39,7 +52,7 @@ class DateTest(TestCase):
         Date(2001, 9, 3),
         Date(-2001, 8, 3),
         date(1888, 1, 27),
-        '1.1.4004 BCE'
+        '1.1.4004 BCE',
     )
     count = len(dates)
 
@@ -87,8 +100,8 @@ class DateTest(TestCase):
         self._assertQuerysetEqual(Model.objects.filter(date__lte='2001-08-03'),
                                   ['2001-08-03', '-2001-08-03', '1888-01-27', '-4003-01-01'])
 
-    def test_invalid_lookup(self):
-        if django.VERSION[:2] != (1, 1):
+    if django.VERSION[:2] != (1, 1):
+        def test_invalid_lookup(self):
             self.assertRaises(ValueError, Model.objects.filter, date__year=2011)
             self.assertRaises(ValueError, Model.objects.filter, date__month=8)
             self.assertRaises(ValueError, Model.objects.filter, date__day=3)
@@ -133,3 +146,16 @@ class DateTest(TestCase):
 
     def test_garbage(self):
         self.assertRaises(ValidationError, Model.objects.create, date='adsfasdfsdf')
+
+    if ENGINE != 'sqlite3':
+        def test_bad_max(self):
+            self.assertRaises(DatabaseError, Model.objects.create, date=MaxDateTime)
+
+        def test_bad_min(self):
+            self.assertRaises(DatabaseError, Model.objects.create, date=MinDateTime)
+
+        def test_int_limits(self):
+            pk1 = Model.objects.create(date=-2147483648).pk
+            pk2 = Model.objects.create(date=2147483647).pk
+            self._assertQuerysetEqual(Model.objects.filter(pk__in=(pk1, pk2)),
+                                      ['-5884323-05-15', '5874898-06-03'])
