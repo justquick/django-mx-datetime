@@ -50,3 +50,9 @@ class DateField(models.DateField):
         defaults = {'form_class': forms.DateField}
         defaults.update(kwargs)
         return super(DateField, self).formfield(**defaults)
+
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ['^djmx\.fields\.DateField'])
+except:
+    pass
