@@ -29,6 +29,7 @@ from .fields import DateField
 from .admin import date_format
 from .forms import DateField as DateFormField
 from .widgets import AdminDateWidget
+from .utils import era_format
 
 
 class Model(models.Model):
@@ -36,7 +37,7 @@ class Model(models.Model):
     today = DateField(auto_now=True, blank=True, null=True)
 
     def __unicode__(self):
-        return self.date.date
+        return era_format(self.date)
 
 
 class Form(forms.ModelForm):
@@ -79,26 +80,26 @@ class DateTest(TestCase):
                          [self.today] * self.count)
 
     def test_filter(self):
-        self._assertQuerysetEqual(Model.objects.filter(date='2001-9-3'), ['2001-09-03'])
+        self._assertQuerysetEqual(Model.objects.filter(date='2001-9-3'), ['2001-09-03 AD'])
 
     def test_in_lookup(self):
         self.assertEqual(Model.objects.filter(date__in=self.dates).count(), self.count)
 
     def test_gt_lookup(self):
         self._assertQuerysetEqual(Model.objects.filter(date__gt='1.1.4004 BC'),
-                                  ['2001-08-03', '2001-09-03', '-2001-08-03', '1888-01-27'])
+                                  ['2001-08-03 AD', '2001-09-03 AD', '2002-08-03 BC', '1888-01-27 AD'])
 
     def test_gte_lookup(self):
         self._assertQuerysetEqual(Model.objects.filter(date__gte='1.1.4004 BC'),
-                                  ['2001-08-03', '2001-09-03', '-2001-08-03', '1888-01-27', '-4003-01-01'])
+                                  ['2001-08-03 AD', '2001-09-03 AD', '2002-08-03 BC', '1888-01-27 AD', '4004-01-01 BC'])
 
     def test_lt_lookup(self):
         self._assertQuerysetEqual(Model.objects.filter(date__lt='2001-08-03'),
-                                  ['-2001-08-03', '1888-01-27', '-4003-01-01'])
+                                  ['2002-08-03 BC', '1888-01-27 AD', '4004-01-01 BC'])
 
     def test_lte_lookup(self):
         self._assertQuerysetEqual(Model.objects.filter(date__lte='2001-08-03'),
-                                  ['2001-08-03', '-2001-08-03', '1888-01-27', '-4003-01-01'])
+                                  ['2001-08-03 AD', '2002-08-03 BC', '1888-01-27 AD', '4004-01-01 BC'])
 
     if django.VERSION[:2] != (1, 1):
         def test_invalid_lookup(self):
@@ -109,9 +110,9 @@ class DateTest(TestCase):
 
     def test_ordering(self):
         self.assertEqual([str(m) for m in Model.objects.order_by('date')],
-                         ['-4003-01-01', '-2001-08-03', '1888-01-27', '2001-08-03', '2001-09-03'])
+                         ['4004-01-01 BC', '2002-08-03 BC', '1888-01-27 AD', '2001-08-03 AD', '2001-09-03 AD'])
         self.assertEqual([str(m) for m in Model.objects.order_by('-date')],
-                         ['2001-09-03', '2001-08-03', '1888-01-27', '-2001-08-03', '-4003-01-01'])
+                         ['2001-09-03 AD', '2001-08-03 AD', '1888-01-27 AD', '2002-08-03 BC', '4004-01-01 BC'])
 
     def test_serialize(self):
         data = loads(serialize('json', Model.objects.filter(date='1.1.4004 BCE')))
@@ -131,7 +132,7 @@ class DateTest(TestCase):
         self.assertTrue(form.is_valid())
         obj = form.save()
         self.assertEqual(obj.today.jdn, self.today)
-        self.assertEqual(unicode(obj), '2000-01-01')
+        self.assertEqual(unicode(obj), '2000-01-01 AD')
 
     def test_date_format(self):
         attr = 'some_date_attr'
@@ -142,7 +143,7 @@ class DateTest(TestCase):
         class MockModel(object):
             some_date_attr = self.dates[0]
 
-        self.assertEqual(method(None, MockModel()), '2001-08-03')
+        self.assertEqual(method(None, MockModel()), '2001-08-03 AD')
 
     def test_garbage(self):
         self.assertRaises(ValidationError, Model.objects.create, date='adsfasdfsdf')
