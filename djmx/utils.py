@@ -9,6 +9,19 @@ except ImportError:
     from django.forms.fields import EMPTY_VALUES
 
 from .exceptions import InvalidDateError
+from .settings import BC, AD
+
+
+def era_format(datetime):
+    """
+    Formats an mx.DateTime.DateTime instance to include BC/AD indicators.
+    Accounts for JDN offset by subtracting a year from BC dates.
+    """
+    bce = False
+    if datetime.year < 0:
+        datetime = datetime.rebuild(year=abs(datetime.year - 1))
+        bce = True
+    return u'%s %s' % (datetime.date, BC if bce else AD)
 
 
 def to_python(instance, value, frmt='date'):

@@ -1,6 +1,7 @@
 from django.db import models
 
 from djmx.fields import DateField
+from djmx.utils import era_format
 
 
 class TimePeriod(models.Model):
@@ -14,8 +15,8 @@ class TimePeriod(models.Model):
 
     def __unicode__(self):
         if self.end_date:
-            return u'%s - %s' % (self.start_date.date, self.end_date.date)
-        return self.start_date.date
+            return u'%s - %s' % (era_format(self.start_date), era_format(self.end_date))
+        return era_format(self.start_date)
 
 
 class MyModel(models.Model):
@@ -26,4 +27,4 @@ class MyModel(models.Model):
         ordering = ('-pub_date', )
 
     def __unicode__(self):
-        return u'%s: (published on %s)' % (self.name, self.pub_date.date)
+        return u'%s: (published on %s)' % (self.name, era_format(self.pub_date))
