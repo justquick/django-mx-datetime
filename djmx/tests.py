@@ -69,8 +69,8 @@ class DateTest(TestCase):
         try:
             return self.assertQuerysetEqual(qs, values, str, False)
         except (AttributeError, TypeError):
-            for obj in qs:
-                self.assert_(str(obj) in values)
+            items = [str(item) for item in qs]
+            return self.assertEqual(set(items), set(values))
 
     def test_created(self):
         self.assertEqual(Model.objects.count(), self.count)
@@ -159,4 +159,4 @@ class DateTest(TestCase):
             pk1 = Model.objects.create(date=-2147483648).pk
             pk2 = Model.objects.create(date=2147483647).pk
             self._assertQuerysetEqual(Model.objects.filter(pk__in=(pk1, pk2)),
-                                      ['-5884323-05-15', '5874898-06-03'])
+                                      ['5884324-05-15 BC', '5874898-06-03 AD'])
