@@ -133,6 +133,9 @@ class DateTest(TestCase):
         obj = form.save()
         self.assertEqual(obj.today.jdn, self.today)
         self.assertEqual(unicode(obj), '2000-01-01 AD')
+        form_text = form.as_p()
+        self.assertIn('placeholder="2000-01-01 AD"', form_text)
+        self.assertIn('value="January 1 2000"', form_text)
 
     def test_date_format(self):
         attr = 'some_date_attr'

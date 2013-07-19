@@ -1,14 +1,10 @@
 from mx.DateTime import DateTimeType
 
 from django.forms import widgets
-from django.forms.util import flatatt
 from django.contrib.admin import widgets as admin_widgets
 from django.utils.encoding import force_unicode
-from django.utils.safestring import mark_safe
 
-from mx import DateTime
-
-from .utils import era_format
+from .utils import era_format, strpdatetime
 
 
 class DateInput(widgets.DateInput):
@@ -29,17 +25,15 @@ class DateInput(widgets.DateInput):
         return value
 
     def render(self, name, value, attrs=None):
-        if value is None:
-            value = ''
-        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
-        if value != '':
+        if attrs is None:
+            attrs = {}
+        if value:
             # Only add the 'value' attribute if a value is non-empty.
-            final_attrs['value'] = force_unicode(self._format_value(value)) 
-            
+            attrs['value'] = force_unicode(self._format_value(value))
+
             # Add formatted value to attrs for display.
-            mxValue = DateTime.Parser.DateFromString(force_unicode(value))
-            final_attrs['placeholder'] = era_format(mxValue)
-        return mark_safe(u'<input%s />' % flatatt(final_attrs)) 
+            attrs['placeholder'] = era_format(strpdatetime(value))
+        return super(DateInput, self).render(name, value, attrs)
 
 
 class AdminDateWidget(DateInput, admin_widgets.AdminDateWidget):
