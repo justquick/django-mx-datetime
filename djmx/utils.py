@@ -1,6 +1,6 @@
 from datetime import date
 
-from mx.DateTime import DateFrom, DateTimeFrom, DateTimeType, DateTimeFromJDN, today
+from mx.DateTime import DateFrom, DateTimeFrom, DateTimeType, DateTimeFromJDN, today, RangeError
 
 from django.core.exceptions import ValidationError
 try:
@@ -65,7 +65,12 @@ def strpdatetime(value, frmt='date'):
     else:
         from_func = DateTimeFrom
     input_value = value
-    value = from_func(value)
+    try:
+        value = from_func(value)
+    except RangeError, exc:
+        raise InvalidDateError(input_value, exc)
+    except ValueError:
+        raise InvalidDateError(input_value)
     try:
         assert value == today()
     except AssertionError:
