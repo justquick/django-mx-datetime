@@ -1,1 +1,1 @@
-egenix-mx-base==3.2.6
+egenix-mx-base==3.2.8
